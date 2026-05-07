@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fmri-testing"
+version = "0.1.0"
+description = "Mechanistic feature alignment between open vision models and BOLD5000 fMRI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "fs-ashoka"}]
+dependencies = [
+  "numpy", "pandas", "scipy", "scikit-learn", "nibabel", "nilearn",
+  "torch", "torchvision", "Pillow", "requests", "tqdm", "matplotlib", "pyyaml", "joblib"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+clip = ["open_clip_torch"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

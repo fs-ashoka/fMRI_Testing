@@ -1,0 +1,46 @@
+project:
+  title: Mechanistic Feature Alignment Between Vision Models and Human fMRI
+  seed: 7
+paths:
+  data_dir: data
+  bold5000_dir: data/bold5000
+  stimuli_dir: data/stimuli
+  output_dir: outputs/full_bold5000
+  checkpoint_dir: checkpoints/full_bold5000
+  figure_dir: figures
+data:
+  figshare_article_id: 14456124
+  preferred_regex: TYPED-FITHRF-GLMDENOISE-RR
+  subjects: [CSI1, CSI2, CSI3, CSI4]
+  sessions: null
+  download_full: false
+  min_free_gb: 150
+  synthetic_if_missing: false
+  max_voxels: null
+  mask_path: null
+features:
+  model_name: resnet50
+  layers: [layer2, layer3, layer4, avgpool]
+  batch_size: 32
+  device: cuda
+  pretrained: true
+  max_images: null
+sae:
+  latent_dim: 4096
+  top_k: 64
+  learning_rate: 0.001
+  batch_size: 256
+  epochs: 50
+  weight_decay: 0.000001
+  l1_penalty: 0.0
+  device: cuda
+encoding:
+  alphas: [0.1, 1.0, 10.0, 100.0, 1000.0]
+  n_splits: 5
+  save_predictions: false
+  feature_sets: [raw, pca, sae, random_projection, shuffled_sae]
+ablation:
+  max_features: null
+  n_controls: 50
+labels:
+  top_k_images: 16

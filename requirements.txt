@@ -1,0 +1,15 @@
+numpy
+pandas
+scipy
+scikit-learn
+nibabel
+nilearn
+torch
+torchvision
+Pillow
+requests
+tqdm
+matplotlib
+pyyaml
+joblib
+pytest
