@@ -1,0 +1,48 @@
+project:
+  title: Mechanistic Feature Alignment Between Vision Models and Human fMRI
+  seed: 13
+paths:
+  data_dir: data/debug
+  bold5000_dir: data/debug/bold5000
+  stimuli_dir: data/debug/stimuli
+  output_dir: outputs/debug
+  checkpoint_dir: checkpoints/debug
+  figure_dir: figures
+data:
+  figshare_article_id: 14456124
+  preferred_regex: TYPED-FITHRF-GLMDENOISE-RR
+  subjects: [CSI1]
+  sessions: [1]
+  download_full: false
+  min_free_gb: 2
+  synthetic_if_missing: true
+  synthetic_trials: 48
+  max_voxels: 64
+  mask_path: null
+features:
+  model_name: synthetic
+  layers: [avgpool]
+  batch_size: 8
+  device: cpu
+  pretrained: false
+  max_images: 48
+  synthetic_dim: 128
+sae:
+  latent_dim: 32
+  top_k: 4
+  learning_rate: 0.003
+  batch_size: 16
+  epochs: 3
+  weight_decay: 0.0
+  l1_penalty: 0.0
+  device: cpu
+encoding:
+  alphas: [0.1, 1.0, 10.0]
+  n_splits: 3
+  save_predictions: true
+  feature_sets: [raw, pca, sae, random_projection, shuffled_sae]
+ablation:
+  max_features: 12
+  n_controls: 5
+labels:
+  top_k_images: 8

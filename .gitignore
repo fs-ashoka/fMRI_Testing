@@ -1,0 +1,17 @@
+data/
+outputs/
+checkpoints/
+figures/
+wandb/
+*.nii
+*.nii.gz
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.venv/
+*.egg-info/
