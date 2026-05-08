@@ -21,10 +21,22 @@ Dataset and project links:
 
 ## Installation
 
+### pip
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
+
+### conda
+
+```bash
+conda env create -f environment.yml
+conda activate fmri-testing
+python -m pip install -e .
 ```
 
 Python 3.10 or newer is required. Optional `open_clip_torch` support can be installed separately, but the core project does not require it and does not use paid APIs.
@@ -43,6 +55,25 @@ Expected debug outputs:
 - `outputs/debug/encoding_summary.csv`
 - `outputs/debug/ablation_summary.json`
 - `figures/debug_encoding_comparison.png`
+
+## Public BOLD5000 metadata check
+
+This checks the no-login public Figshare metadata and writes a manifest without downloading the large dataset.
+
+```bash
+bash scripts/check_bold5000_metadata.sh
+```
+
+Expected outputs:
+
+- `outputs/bold5000_file_manifest.csv`
+- `outputs/bold5000_file_manifest.json`
+
+A metadata-only dry run is also available:
+
+```bash
+bash scripts/run_real_metadata_check.sh
+```
 
 ## Listing and downloading BOLD5000 files
 
@@ -103,13 +134,14 @@ The script first lists public Figshare files as a safety check and then runs pre
 ## Testing
 
 ```bash
-pytest
+python -m compileall -q src scripts tests
+pytest -q
 ```
 
 ## Repository layout
 
-- `configs/`: reproducible small, default, and full configurations.
+- `configs/`: reproducible small, metadata-only, default, and full configurations.
 - `src/fmri_testing/`: data, features, SAE, encoding, ablation, stats, visualization, and utility code.
 - `scripts/`: numbered command-line stages and end-to-end runners.
-- `docs/`: methods, paper outline, and data notes.
+- `docs/`: install notes, methods, paper outline, data notes, and run plan.
 - `tests/`: unit tests for metadata parsing, SAE sparsity/shapes, encoding, and ablation.
