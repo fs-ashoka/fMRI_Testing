@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--list-only", action="store_true")
     parser.add_argument("--regex", default=None)
     parser.add_argument("--subject", action="append", default=None)
+    parser.add_argument("--min-free-gb", type=float, default=None, help="Override config data.min_free_gb for small smoke-test downloads.")
     parser.add_argument("--full", action="store_true", help="Download all matching files; otherwise subject/regex defaults apply.")
     args = parser.parse_args()
     log = setup_logging()
@@ -29,13 +30,15 @@ def main() -> None:
     regex = args.regex or cfg["data"].get("preferred_regex")
     subjects = args.subject or cfg["data"].get("subjects")
     selected = files if args.full else filter_files(files, regex=regex, subjects=subjects)
+    selected_df = files_to_dataframe(selected)
     log.info("Article has %d files; selected %d files", len(files), len(selected))
-    print(files_to_dataframe(selected).to_string(index=False))
+    print(selected_df.to_string(index=False))
     if args.list_only:
         return
     if args.full and not cfg["data"].get("download_full", False):
         raise RuntimeError("Full download requested but config data.download_full is false. Set it true to acknowledge large download.")
-    download_selected(selected, cfg["paths"]["bold5000_dir"], float(cfg["data"].get("min_free_gb", 1)))
+    min_free_gb = args.min_free_gb if args.min_free_gb is not None else float(cfg["data"].get("min_free_gb", 1))
+    download_selected(selected, cfg["paths"]["bold5000_dir"], float(min_free_gb))
 
 if __name__ == "__main__":
     main()
