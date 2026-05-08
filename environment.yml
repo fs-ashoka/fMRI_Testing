@@ -1,0 +1,22 @@
+name: fmri-testing
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - nibabel
+  - nilearn
+  - pytorch
+  - torchvision
+  - pillow
+  - requests
+  - tqdm
+  - matplotlib
+  - pyyaml
+  - joblib
+  - pytest
+  - pip
