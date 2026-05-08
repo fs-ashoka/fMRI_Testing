@@ -23,6 +23,25 @@ def _subject_file_candidates(bold_dir: Path, subject: str, preferred_regex: str 
     return sorted(files)
 
 
+def _load_subject_image_names(bold_dir: Path, subject: str) -> list[str]:
+    """Load BOLD5000 per-subject image names when the text file is available."""
+    candidates = sorted(
+        p for p in bold_dir.rglob("*.txt")
+        if subject.lower() in p.name.lower() and "imgnames" in p.name.lower()
+    )
+    if not candidates:
+        return []
+    names: list[str] = []
+    for line in candidates[0].read_text(encoding="utf-8", errors="ignore").splitlines():
+        clean = line.strip()
+        if not clean:
+            continue
+        # Preserve the original base name but normalize common whitespace or MATLAB formatting.
+        clean = clean.split()[0]
+        names.append(Path(clean).name)
+    return names
+
+
 def _load_beta_file(path: Path) -> np.ndarray:
     """Load a beta file and return an array shaped trials x voxels."""
     if path.suffix == ".npy":
@@ -42,7 +61,6 @@ def _load_beta_file(path: Path) -> np.ndarray:
 
     arr = np.asarray(arr, dtype=np.float32)
     if arr.ndim == 4:
-        # Common NIfTI layout: X x Y x Z x trials.
         arr = np.moveaxis(arr, -1, 0).reshape(arr.shape[-1], -1)
     elif arr.ndim == 3:
         arr = arr.reshape(1, -1)
@@ -94,13 +112,7 @@ def _synthetic_betas(cfg: dict[str, Any], subject: str) -> tuple[np.ndarray, pd.
 
 
 def prepare_subject_betas(cfg: dict[str, Any], subject: str) -> tuple[Path, Path, Path]:
-    """Prepare one subject's BOLD5000 betas or synthetic debug data.
-
-    Outputs:
-      prepared_betas_subject_<subject>.npz with key ``betas``
-      trial_metadata_subject_<subject>.csv
-      voxel_mask_subject_<subject>.npz with key ``mask``
-    """
+    """Prepare one subject's BOLD5000 betas or synthetic debug data."""
     out = Path(cfg["paths"]["output_dir"])
     out.mkdir(parents=True, exist_ok=True)
     bold_dir = Path(cfg["paths"]["bold5000_dir"])
@@ -116,6 +128,7 @@ def prepare_subject_betas(cfg: dict[str, Any], subject: str) -> tuple[Path, Path
                 f"No local beta files found for {subject} under {bold_dir}. Run scripts/00_download_bold5000.py or enable synthetic_if_missing."
             )
     else:
+        subject_image_names = _load_subject_image_names(bold_dir, subject)
         sessions: list[np.ndarray] = []
         rows: list[dict[str, Any]] = []
         beta_offset = 0
@@ -123,15 +136,17 @@ def prepare_subject_betas(cfg: dict[str, Any], subject: str) -> tuple[Path, Path
             arr = _zscore_session(_load_beta_file(path))
             sessions.append(arr)
             for trial in range(arr.shape[0]):
+                beta_row = beta_offset + trial
+                image_name = subject_image_names[beta_row] if beta_row < len(subject_image_names) else f"{subject}_session{session_idx:02d}_trial{trial:05d}.png"
                 rows.append(
                     {
                         "subject": subject,
                         "session": session_idx,
                         "source_file": path.name,
                         "trial": trial,
-                        "beta_row": beta_offset + trial,
-                        "image_name": f"{subject}_session{session_idx:02d}_trial{trial:05d}.png",
-                        "image_id": f"{subject}_session{session_idx:02d}_trial{trial:05d}",
+                        "beta_row": beta_row,
+                        "image_name": image_name,
+                        "image_id": Path(image_name).stem,
                     }
                 )
             beta_offset += arr.shape[0]
@@ -145,6 +160,8 @@ def prepare_subject_betas(cfg: dict[str, Any], subject: str) -> tuple[Path, Path
             mask = limited_mask
         betas = betas[:, mask]
         meta = pd.DataFrame(rows)
+        if subject_image_names and len(subject_image_names) != len(meta):
+            meta["image_name_count_warning"] = f"imgnames_count={len(subject_image_names)} beta_rows={len(meta)}"
 
     beta_path = out / f"prepared_betas_subject_{subject}.npz"
     meta_path = out / f"trial_metadata_subject_{subject}.csv"
